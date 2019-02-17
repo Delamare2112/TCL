@@ -8,6 +8,12 @@
 #include <unordered_map>
 #include <GLFW/glfw3.h>
 
+static const unsigned int MAX_VAL = -1;
+
+float pixel_value_to_float(unsigned int val) {
+	return (float)val / (float)MAX_VAL;
+}
+
 struct Pixel {
 	unsigned int r,g,b;
 	void Birth() {
@@ -20,13 +26,27 @@ struct Pixel {
 		g = 0;
 		b = 0;
 	}
+	void Age() {
+		if (pixel_value_to_float(r) > 0.25) {
+			r -= 0.1f * MAX_VAL;
+			return;
+		}
+		if (pixel_value_to_float(g) > 0.25) {
+			g -= 0.1f * MAX_VAL;
+			return;
+		}
+		if (pixel_value_to_float(b) > 0.25) {
+			b -= 0.1f * MAX_VAL;
+			return;
+		}
+	}
 };
 
 struct Settings {
 	int screen_width = 1920;
 	int screen_height = 1080;
 	int pixel_size = 10;
-	int step_time = 500;
+	int step_time = 100;
 	bool full_screen = false;
 	char* seed = nullptr;
 	int rand_mod = 5;
@@ -115,56 +135,30 @@ public:
 
 	u_int8_t count_neightbors(size_t x, size_t y) {
 		u_int8_t ret = 0;
-		// if (x + 1 < width &&  {
-		// 	ret++;
-		// }
-		// if (x + 1 < width && y + 1 < height &&  {
-		// 	ret++;
-		// }
-		// if (y + 1 < height &&  {
-		// 	ret++;
-		// }
-		// if (y + 1 < height && x - 1 >= 0 &&  {
-		// 	ret++;
-		// }
-		// if (x - 1 >= 0 &&  {
-		// 	ret++;
-		// }
-		// if (x - 1 >= 0 && y - 1 >= 0 &&  {
-		// 	ret++;
-		// }
-		// if (y - 1 >= 0 &&  {
-		// 	ret++;
-		// }
-		// if (y - 1 >= 0 && x + 1 < width &&  {
-		// 	ret++;
-		// }
-
-		if (get(x+1,y).r == -1) {
+		if (get(x+1,y).r != 0) {
 			ret++;
 		}
-		if (get(x+1,y+1).r == -1) {
+		if (get(x+1,y+1).r != 0) {
 			ret++;
 		}
-		if (get(x,y+1).r == -1) {
+		if (get(x,y+1).r != 0) {
 			ret++;
 		}
-		if (get(x-1,y+1).r == -1) {
+		if (get(x-1,y+1).r != 0) {
 			ret++;
 		}
-		if (get(x-1,y).r == -1) {
+		if (get(x-1,y).r != 0) {
 			ret++;
 		}
-		if (get(x-1,y-1).r == -1) {
+		if (get(x-1,y-1).r != 0) {
 			ret++;
 		}
-		if (get(x,y-1).r == -1) {
+		if (get(x,y-1).r != 0) {
 			ret++;
 		}
-		if (get(x+1,y-1).r == -1) {
+		if (get(x+1,y-1).r != 0) {
 			ret++;
 		}
-
 		return ret;
 	}
 
@@ -176,12 +170,12 @@ public:
 		for (auto y = 0; y < height; y++) {
 			Pixel& cell = get(x,y);
 			Pixel& new_cell = get(x,y,other);
-			const bool alive = cell.r == -1;
+			const bool alive = cell.r != 0;
 			const u_int8_t neightbors = count_neightbors(x,y);
 			if (alive) {
 				if (neightbors == 3 || neightbors == 2) {
 					new_cell = cell;
-					// TOOD: new_cell.Age();
+					new_cell.Age();
 				}
 			} else {
 				if (neightbors == 3) {
@@ -212,6 +206,8 @@ void main_loop(const Settings& settings, GLFWwindow*const window) {
 
 int main(int argc, char** argv) {
 	Settings settings = parse_arguments(argc, argv);
+
+	std::cout << MAX_VAL << '\n';
 
 	auto seed = 0;
 	if (settings.seed == nullptr) {
