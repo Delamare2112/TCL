@@ -207,8 +207,6 @@ void main_loop(const Settings& settings, GLFWwindow*const window) {
 int main(int argc, char** argv) {
 	Settings settings = parse_arguments(argc, argv);
 
-	std::cout << MAX_VAL << '\n';
-
 	auto seed = 0;
 	if (settings.seed == nullptr) {
 		seed = time(0);
@@ -225,7 +223,21 @@ int main(int argc, char** argv) {
 		std::cerr << "Failed to init GLFW!\n";
 		return -1;
 	}
-	GLFWwindow* window = glfwCreateWindow(settings.screen_width, settings.screen_height, "Conway's Game Of Life", nullptr, nullptr);
+
+	GLFWmonitor* monitor = nullptr;
+	if (settings.full_screen) {
+		monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+		glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+		glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+		glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+		glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+		settings.screen_width = mode->width;
+		settings.screen_height = mode->height;
+	}
+
+
+	GLFWwindow* window = glfwCreateWindow(settings.screen_width, settings.screen_height, "Conway's Game Of Life", monitor, nullptr);
 	if (!window) {
 		std::cerr << "Failed to glfwCreateWindow!\n";
 		glfwTerminate();
