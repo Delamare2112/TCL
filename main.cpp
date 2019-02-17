@@ -236,7 +236,6 @@ int main(int argc, char** argv) {
 		settings.screen_height = mode->height;
 	}
 
-
 	GLFWwindow* window = glfwCreateWindow(settings.screen_width, settings.screen_height, "Conway's Game Of Life", monitor, nullptr);
 	if (!window) {
 		std::cerr << "Failed to glfwCreateWindow!\n";
