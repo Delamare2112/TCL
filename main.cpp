@@ -29,6 +29,7 @@ struct Settings {
 	int step_time = 500;
 	bool full_screen = false;
 	char* seed = nullptr;
+	int rand_mod = 5;
 };
 
 void error_callback(int error, const char* description)
@@ -58,6 +59,9 @@ Settings parse_arguments(int argc, char** argv) {
 		else if (strcmp(arg, "--seed") == 0) {
 			ret.seed = argv[i+1];
 		}
+		else if (strcmp(arg, "--randmod") == 0) {
+			ret.rand_mod = atoi(argv[i+1]);
+		}
 	}
 	return ret;
 }
@@ -69,7 +73,7 @@ public:
 	Pixel* buffer2;
 	Pixel* current;
 
-	Canvas(size_t width, size_t height) {
+	Canvas(size_t width, size_t height, int rand_mod) {
 		this->width = width;
 		this->height = height;
 
@@ -81,7 +85,7 @@ public:
 
 		for (size_t x = 0; x < width; x++)
 		for (size_t y = 0; y < height; y++) {
-			if (rand() % 5 == 0) {
+			if (rand() % rand_mod == 0) {
 				get(x,y).Birth();
 			}
 		}
@@ -155,7 +159,7 @@ public:
 
 void main_loop(const Settings& settings, GLFWwindow*const window) {
 	glPixelZoom(settings.pixel_size,settings.pixel_size);
-	Canvas canvas(settings.screen_width / settings.pixel_size, settings.screen_height / settings.pixel_size);
+	Canvas canvas(settings.screen_width / settings.pixel_size, settings.screen_height / settings.pixel_size, settings.rand_mod);
 	
 	while (!glfwWindowShouldClose(window)) {
 		glClearColor( 0, 0, 0, 1 );
@@ -177,7 +181,7 @@ int main(int argc, char** argv) {
 	if (settings.seed == nullptr) {
 		seed = time(0);
 	} else {
-		auto haba_hasher = std::unordered_map<std::string, unsigned int>().hash_function();
+		auto haba_hasher = std::unordered_map<std::string, unsigned int>().hash_function(); // lol
 		seed = haba_hasher(settings.seed);
 	}
 	std::cout << "Seeds duncan: " << seed << '\n';
