@@ -97,6 +97,16 @@ public:
 	}
 
 	Pixel& get(size_t x, size_t y, Pixel* data) const {
+		if (x == width) {
+			x = 0;
+		} else if (x == -1) {
+			x = width - 1;
+		}
+		if (y == height) {
+			y = 0;
+		} else if (y == -1) {
+			y = height - 1;
+		}
 		return data[(y * width) + x];
 	}
 	Pixel& get(size_t x, size_t y) const {
@@ -105,30 +115,56 @@ public:
 
 	u_int8_t count_neightbors(size_t x, size_t y) {
 		u_int8_t ret = 0;
-		if (x + 1 < width && get(x+1,y).r == -1) {
+		// if (x + 1 < width &&  {
+		// 	ret++;
+		// }
+		// if (x + 1 < width && y + 1 < height &&  {
+		// 	ret++;
+		// }
+		// if (y + 1 < height &&  {
+		// 	ret++;
+		// }
+		// if (y + 1 < height && x - 1 >= 0 &&  {
+		// 	ret++;
+		// }
+		// if (x - 1 >= 0 &&  {
+		// 	ret++;
+		// }
+		// if (x - 1 >= 0 && y - 1 >= 0 &&  {
+		// 	ret++;
+		// }
+		// if (y - 1 >= 0 &&  {
+		// 	ret++;
+		// }
+		// if (y - 1 >= 0 && x + 1 < width &&  {
+		// 	ret++;
+		// }
+
+		if (get(x+1,y).r == -1) {
 			ret++;
 		}
-		if (x + 1 < width && y + 1 < height && get(x+1,y+1).r == -1) {
+		if (get(x+1,y+1).r == -1) {
 			ret++;
 		}
-		if (y + 1 < height && get(x,y+1).r == -1) {
+		if (get(x,y+1).r == -1) {
 			ret++;
 		}
-		if (y + 1 < height && x - 1 >= 0 && get(x-1,y+1).r == -1) {
+		if (get(x-1,y+1).r == -1) {
 			ret++;
 		}
-		if (x - 1 >= 0 && get(x-1,y).r == -1) {
+		if (get(x-1,y).r == -1) {
 			ret++;
 		}
-		if (x - 1 >= 0 && y - 1 >= 0 && get(x-1,y-1).r == -1) {
+		if (get(x-1,y-1).r == -1) {
 			ret++;
 		}
-		if (y - 1 >= 0 && get(x,y-1).r == -1) {
+		if (get(x,y-1).r == -1) {
 			ret++;
 		}
-		if (y - 1 >= 0 && x + 1 < width && get(x+1,y-1).r == -1) {
+		if (get(x+1,y-1).r == -1) {
 			ret++;
 		}
+
 		return ret;
 	}
 
