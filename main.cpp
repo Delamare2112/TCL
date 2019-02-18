@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unordered_map>
-#include <GLFW/glfw3.h>
+#include <GL/gl.h>
+#include <SDL2/SDL.h>
 
 static const unsigned int MAX_VAL = -1;
 
@@ -51,11 +52,6 @@ struct Settings {
 	char* seed = nullptr;
 	int rand_mod = 5;
 };
-
-void error_callback(int error, const char* description)
-{
-    puts(description);
-}
 
 Settings parse_arguments(int argc, char** argv) {
 	Settings ret;
@@ -187,21 +183,37 @@ public:
 	}
 };
 
-void main_loop(const Settings& settings, GLFWwindow*const window) {
+bool main_loop(const Settings& settings, SDL_Window*const window) {
 	glPixelZoom(settings.pixel_size,settings.pixel_size);
 	Canvas canvas(settings.screen_width / settings.pixel_size, settings.screen_height / settings.pixel_size, settings.rand_mod);
 	
-	while (!glfwWindowShouldClose(window)) {
+	bool should_close = false;
+	while (!should_close) {
 		glClearColor( 0, 0, 0, 1 );
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		canvas.Step();
 
-	    glDrawPixels( canvas.width, canvas.height, GL_RGB, GL_UNSIGNED_INT, canvas.current );
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		glDrawPixels( canvas.width, canvas.height, GL_RGB, GL_UNSIGNED_INT, canvas.current );
+		SDL_GL_SwapWindow(window);
+
+		SDL_Event event;
+		while (SDL_PollEvent(&event)) {		
+			should_close = event.type == SDL_QUIT;
+			if (event.type == SDL_KEYDOWN) {
+				switch (event.key.keysym.sym) {
+				case SDLK_SPACE:
+					return true;
+					break;
+				case SDLK_ESCAPE:
+					should_close = true;
+					break;
+				}
+			}
+		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(settings.step_time));
 	}
+	return false;
 }
 
 int main(int argc, char** argv) {
@@ -217,36 +229,31 @@ int main(int argc, char** argv) {
 	std::cout << "Seeds duncan: " << seed << '\n';
 	srand(seed);
 
-	glfwSetErrorCallback(error_callback);
-
-	if (!glfwInit()) {
-		std::cerr << "Failed to init GLFW!\n";
+	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+		std::cerr << "Failed to init SDL: " << SDL_GetError() << '\n';
 		return -1;
 	}
 
-	GLFWmonitor* monitor = nullptr;
+	auto sdl_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
 	if (settings.full_screen) {
-		monitor = glfwGetPrimaryMonitor();
-		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-		glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-		glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-		glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-		glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-		settings.screen_width = mode->width;
-		settings.screen_height = mode->height;
+		sdl_flags |= SDL_WINDOW_FULLSCREEN;
+		SDL_DisplayMode dm;
+		SDL_GetCurrentDisplayMode(0, &dm);
+		settings.screen_width = dm.w;
+		settings.screen_height = dm.h;
 	}
 
-	GLFWwindow* window = glfwCreateWindow(settings.screen_width, settings.screen_height, "Conway's Game Of Life", monitor, nullptr);
+	SDL_Window* window = SDL_CreateWindow("Conway's Game of Life", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, settings.screen_width, settings.screen_height, sdl_flags);
+
 	if (!window) {
-		std::cerr << "Failed to glfwCreateWindow!\n";
-		glfwTerminate();
+		std::cerr << "Failed to SDL_CreateWindow!\n";
 		return -1;
 	}
 
-	glfwMakeContextCurrent(window);
+	SDL_GLContext glcontext = SDL_GL_CreateContext(window);
 
-	main_loop(settings, window);
+	while(main_loop(settings, window));
 
-	glfwTerminate();
+	SDL_GL_DeleteContext(glcontext);
 	return 0;
 }
