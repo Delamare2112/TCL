@@ -188,11 +188,16 @@ bool main_loop(const Settings& settings, SDL_Window*const window) {
 	Canvas canvas(settings.screen_width / settings.pixel_size, settings.screen_height / settings.pixel_size, settings.rand_mod);
 	
 	bool should_close = false;
+	bool paused = false;
 	while (!should_close) {
 		glClearColor( 0, 0, 0, 1 );
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		canvas.Step();
+		if (!paused)
+			canvas.Step();
+		else {
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
 
 		glDrawPixels( canvas.width, canvas.height, GL_RGB, GL_UNSIGNED_INT, canvas.current );
 		SDL_GL_SwapWindow(window);
@@ -203,7 +208,9 @@ bool main_loop(const Settings& settings, SDL_Window*const window) {
 			if (event.type == SDL_KEYDOWN) {
 				switch (event.key.keysym.sym) {
 				case SDLK_SPACE:
-					return true;
+					if (paused)
+						return true;
+					paused = !paused;
 					break;
 				case SDLK_ESCAPE:
 					should_close = true;
